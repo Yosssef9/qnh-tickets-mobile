@@ -40,7 +40,14 @@ export default function HomePage() {
         try {
           const allTicketsRes = await getAllTickets();
           const allTickets = allTicketsRes?.data?.tickets || [];
-          allCount = Array.isArray(allTickets) ? allTickets.length : 0;
+
+          const filteredTickets = Array.isArray(allTickets)
+            ? allTickets.filter(
+                (t) => t.status !== "Closed" && t.status !== "Cancelled",
+              )
+            : [];
+
+          allCount = filteredTickets.length;
         } catch (error) {
           console.error("Failed to load all tickets:", error);
         }
@@ -150,7 +157,9 @@ export default function HomePage() {
                       <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15">
                         <Tickets size={17} />
                       </div>
-                      <span className="text-sm font-medium">All Tickets</span>
+                      <span className="text-sm font-medium">
+                        All Active Tickets
+                      </span>
                     </div>
                     <p className="mt-3 text-3xl font-extrabold">
                       {allTicketsCount}
