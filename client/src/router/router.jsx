@@ -5,6 +5,7 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import CreateTicketPage from "../pages/CreateTicketPage";
 import AllTicketsPage from "../pages/AllTicketsPage";
 import MyTicketsPage from "../pages/MyTicketsPage";
+import TicketDetailsPage from "../pages/TicketDetailsPage";
 
 const router = createBrowserRouter([
   {
@@ -40,6 +41,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <MyTicketsPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/tickets/:id",
+    element: (
+      <ProtectedRoute>
+        <TicketDetailsPage />
       </ProtectedRoute>
     ),
   },

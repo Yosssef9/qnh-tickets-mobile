@@ -7,6 +7,7 @@ import {
   Search,
   Ticket,
   ArrowUp,
+  Paperclip,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Loader from "../components/Loader";
@@ -535,6 +536,11 @@ export default function AllTicketsPage() {
                         <motion.button
                           key={ticket.id || ticket.ticket_id}
                           type="button"
+                          onClick={() =>
+                            navigate(
+                              `/tickets/${ticket.id || ticket.ticket_id}`,
+                            )
+                          }
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{
@@ -569,9 +575,18 @@ export default function AllTicketsPage() {
                                 </span>
                               </div>
 
-                              <h3 className="mt-3 line-clamp-1 text-sm font-bold text-slate-800">
-                                {ticket.title || "Untitled Ticket"}
-                              </h3>
+                              <div className="mt-3 flex items-center justify-between gap-2">
+                                <h3 className="line-clamp-1 text-sm font-bold text-slate-800">
+                                  {ticket.title || "Untitled Ticket"}
+                                </h3>
+
+                                {ticket.has_attachments ? (
+                                  <div className="flex items-center gap-1 rounded-lg bg-[rgb(21,98,160)]/10 px-2 py-1 text-[10px] font-semibold text-[rgb(21,98,160)]">
+                                    <Paperclip size={12} />
+                                    File
+                                  </div>
+                                ) : null}
+                              </div>
 
                               <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">
                                 {ticket.description || "-"}

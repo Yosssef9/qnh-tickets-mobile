@@ -19,6 +19,7 @@ export default function CreateTicketPage() {
   const navigate = useNavigate();
   const [openDropdown, setOpenDropdown] = useState(false);
   const dropdownRef = useRef(null);
+  const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [technician, setTechnician] = useState("");
   const [imageFile, setImageFile] = useState(null);
@@ -59,14 +60,8 @@ export default function CreateTicketPage() {
     setMessage("");
     setMessageType("");
 
-    if (!description.trim()) {
-      setMessage("Description is required");
-      setMessageType("error");
-      return;
-    }
-
-    if (!technician) {
-      setMessage("Please choose a technician");
+    if (!title.trim()) {
+      setMessage("Title is required");
       setMessageType("error");
       return;
     }
@@ -75,6 +70,7 @@ export default function CreateTicketPage() {
       setSubmitting(true);
 
       const data = await createAndAssignTicket({
+        title,
         description,
         technicianCode: technician,
         imageFile,
@@ -86,7 +82,7 @@ export default function CreateTicketPage() {
 
       setMessage(data.message || "Ticket created successfully");
       setMessageType("success");
-
+      setTitle("");
       setDescription("");
       setTechnician("");
       setImageFile(null);
@@ -142,8 +138,8 @@ export default function CreateTicketPage() {
                       Submit your issue quickly
                     </h2>
                     <p className="mt-1 text-sm text-white/80">
-                      Fill the description, choose the technician, and
-                      optionally attach an image.
+                      Fill the title, optionally add details, and attach an
+                      image if needed.
                     </p>
                   </div>
 
@@ -162,11 +158,26 @@ export default function CreateTicketPage() {
                   Create Ticket
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  Description and technician are required
+                  Title is required. Description and technician are optional
                 </p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Title */}
+                <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+                  <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                    <MessageSquareText size={16} />
+                    Title
+                  </label>
+
+                  <input
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Enter short title..."
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[rgb(21,98,160)] focus:bg-white focus:ring-4 focus:ring-[rgb(21,98,160)]/10"
+                    required
+                  />
+                </div>
                 {/* Description */}
                 <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
                   <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
@@ -177,10 +188,9 @@ export default function CreateTicketPage() {
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Describe the issue clearly..."
+                    placeholder="Optional: add more details..."
                     rows={5}
                     className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[rgb(21,98,160)] focus:bg-white focus:ring-4 focus:ring-[rgb(21,98,160)]/10"
-                    required
                   />
                 </div>
 
@@ -188,7 +198,7 @@ export default function CreateTicketPage() {
                 <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
                   <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
                     <UserRoundSearch size={16} />
-                    Technician
+                    Technician (Optional)
                   </label>
                   <div ref={dropdownRef} className="relative">
                     {" "}
@@ -210,7 +220,7 @@ export default function CreateTicketPage() {
                                 (t) =>
                                   (t.USER_CODE || t.username) === technician,
                               )?.USER_NAME || technician
-                            : "Choose technician"}
+                            : "Assign technician (optional)"}
                       </span>
 
                       <ChevronRight
@@ -304,7 +314,7 @@ export default function CreateTicketPage() {
                 {/* Submit */}
                 <button
                   type="submit"
-                  disabled={submitting || loadingTechs}
+                  disabled={submitting}
                   className="flex w-full items-center justify-center gap-2 rounded-[24px] bg-[rgb(21,98,160)] px-4 py-4 text-sm font-bold text-white shadow-[0_18px_40px_rgba(21,98,160,0.22)] transition hover:bg-[rgb(15,75,125)] disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {submitting ? (
