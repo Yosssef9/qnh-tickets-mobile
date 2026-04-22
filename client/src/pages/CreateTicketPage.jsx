@@ -112,7 +112,7 @@ export default function CreateTicketPage() {
         <div className="relative z-10 px-4 pt-8">
           <div className="flex items-center justify-between gap-3 text-white">
             <button
-              onClick={() => navigate(-1)}
+              onClick={() => navigate("/")}
               className="flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-3 py-2 text-sm font-medium text-white backdrop-blur-md transition hover:bg-white/20"
             >
               <ArrowLeft size={16} />
