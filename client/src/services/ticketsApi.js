@@ -20,7 +20,7 @@ export async function getTicketById(ticketId) {
 
 export function getTicketAttachmentDownloadUrl(ticketId, attachmentId) {
   const base = import.meta.env.VITE_API_BASE_URL;
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("auth_token");
 
   return `${base}/api/tickets/${ticketId}/attachments/${attachmentId}/download?token=${encodeURIComponent(token || "")}`;
 }
