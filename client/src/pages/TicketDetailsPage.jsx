@@ -40,7 +40,20 @@ function getStatusClasses(status) {
       return "bg-slate-100 text-slate-700";
   }
 }
-
+function getPriorityClasses(priority) {
+  switch (String(priority || "").toLowerCase()) {
+    case "critical":
+      return "bg-rose-100 text-rose-700 ring-1 ring-rose-200";
+    case "high":
+      return "bg-orange-100 text-orange-700 ring-1 ring-orange-200";
+    case "medium":
+      return "bg-amber-100 text-amber-700 ring-1 ring-amber-200";
+    case "low":
+      return "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200";
+    default:
+      return "bg-slate-100 text-slate-700 ring-1 ring-slate-200";
+  }
+}
 export default function TicketDetailsPage() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -200,28 +213,34 @@ export default function TicketDetailsPage() {
                   <div className="space-y-3 text-sm">
                     <div className="flex items-start justify-between gap-4">
                       <span className="text-slate-500">Category</span>
-                      <span className="text-right font-medium text-slate-800">
+                      <span className="text-right text-sm font-semibold text-slate-700">
+                        {" "}
                         {ticket.category || "-"}
                       </span>
                     </div>
 
                     <div className="flex items-start justify-between gap-4">
                       <span className="text-slate-500">Type</span>
-                      <span className="text-right font-medium text-slate-800">
+                      <span className="text-right text-sm font-semibold text-slate-700">
+                        {" "}
                         {ticket.ticket_type_description || "-"}
                       </span>
                     </div>
 
                     <div className="flex items-start justify-between gap-4">
                       <span className="text-slate-500">Priority</span>
-                      <span className="text-right font-medium text-slate-800">
+                      <span
+                        className={`rounded-xl px-2.5 py-1 text-xs font-semibold ${getPriorityClasses(
+                          ticket.priority,
+                        )}`}
+                      >
                         {ticket.priority || "-"}
                       </span>
                     </div>
-
                     <div className="flex items-start justify-between gap-4">
                       <span className="text-slate-500">Subcategory</span>
-                      <span className="text-right font-medium text-slate-800">
+                      <span className="text-right text-sm font-semibold text-slate-700">
+                        {" "}
                         {ticket.subcategory_name || "-"}
                       </span>
                     </div>
@@ -237,14 +256,16 @@ export default function TicketDetailsPage() {
                   <div className="space-y-3 text-sm">
                     <div className="flex items-start justify-between gap-4">
                       <span className="text-slate-500">Requester</span>
-                      <span className="text-right font-medium text-slate-800">
+                      <span className="text-right text-sm font-semibold text-slate-700">
+                        {" "}
                         {ticket.created_by_name || ticket.created_by || "-"}
                       </span>
                     </div>
 
                     <div className="flex items-start justify-between gap-4">
                       <span className="text-slate-500">Assigned To</span>
-                      <span className="text-right font-medium text-slate-800">
+                      <span className="text-right text-sm font-semibold text-slate-700">
+                        {" "}
                         {ticket.assigned_to_name || ticket.assigned_to || "-"}
                       </span>
                     </div>
@@ -252,7 +273,8 @@ export default function TicketDetailsPage() {
                     {ticket.closed_by_name || ticket.closed_by ? (
                       <div className="flex items-start justify-between gap-4">
                         <span className="text-slate-500">Closed By</span>
-                        <span className="text-right font-medium text-slate-800">
+                        <span className="text-right text-sm font-semibold text-slate-700">
+                          {" "}
                           {ticket.closed_by_name || ticket.closed_by}
                         </span>
                       </div>
@@ -269,14 +291,16 @@ export default function TicketDetailsPage() {
                   <div className="space-y-3 text-sm">
                     <div className="flex items-start justify-between gap-4">
                       <span className="text-slate-500">Created</span>
-                      <span className="text-right font-medium text-slate-800">
+                      <span className="text-right text-sm font-semibold text-slate-700">
+                        {" "}
                         {ticket.created_at || "-"}
                       </span>
                     </div>
 
                     <div className="flex items-start justify-between gap-4">
                       <span className="text-slate-500">Due Date</span>
-                      <span className="text-right font-medium text-slate-800">
+                      <span className="text-right text-sm font-semibold text-slate-700">
+                        {" "}
                         {ticket.due_date || "-"}
                       </span>
                     </div>
@@ -284,7 +308,8 @@ export default function TicketDetailsPage() {
                     {ticket.closed_at ? (
                       <div className="flex items-start justify-between gap-4">
                         <span className="text-slate-500">Closed At</span>
-                        <span className="text-right font-medium text-slate-800">
+                        <span className="text-right text-sm font-semibold text-slate-700">
+                          {" "}
                           {ticket.closed_at}
                         </span>
                       </div>
