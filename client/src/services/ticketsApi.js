@@ -18,9 +18,26 @@ export async function getTicketById(ticketId) {
   return response.data;
 }
 
-export function getTicketAttachmentDownloadUrl(fileUrl) {
+export function getTicketAttachmentDownloadUrl(filePath) {
   const base = import.meta.env.VITE_API_BASE_URL;
-  return fileUrl ? `${base}${fileUrl}` : "";
+
+  if (!filePath) return "";
+
+  // normalize slashes
+  const normalized = filePath.replace(/\\/g, "/");
+
+  // find where "uploads" starts
+  const index = normalized.toLowerCase().indexOf("uploads/");
+
+  if (index === -1) {
+    console.warn("Invalid file path:", filePath);
+    return "";
+  }
+
+  // keep only /uploads/...
+  const publicPath = normalized.substring(index);
+
+  return `${base}/${publicPath}`;
 }
 /**
  * Step 1: Create ticket

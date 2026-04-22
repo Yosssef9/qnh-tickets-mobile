@@ -338,7 +338,7 @@ export default function TicketDetailsPage() {
                   <div className="space-y-4">
                     {imageAttachments.map((att, index) => {
                       const downloadUrl = getTicketAttachmentDownloadUrl(
-                        att.file_url,
+                        att.file_url || att.file_path,
                       );
 
                       return (
@@ -395,7 +395,7 @@ export default function TicketDetailsPage() {
                   <div className="space-y-3">
                     {fileAttachments.map((att, index) => {
                       const downloadUrl = getTicketAttachmentDownloadUrl(
-                        att.file_url,
+                        att.file_url || att.file_path,
                       );
 
                       return (
