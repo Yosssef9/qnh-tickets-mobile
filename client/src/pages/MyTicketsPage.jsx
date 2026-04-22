@@ -13,6 +13,8 @@ import { getMyTickets } from "../services/ticketsApi";
 import Loader from "../components/Loader";
 import useScrollToTopButton from "../hooks/useScrollToTopButton";
 import ScrollToTopButton from "../components/ScrollToTopButton";
+import TicketsPageSkeleton from "../components/TicketsPageSkeleton";
+
 const PAGE_SIZE = 20;
 
 export default function MyTicketsPage() {
@@ -115,9 +117,15 @@ export default function MyTicketsPage() {
   };
 
   if (loading) {
-    return <Loader />;
+    return (
+      <TicketsPageSkeleton
+        title="My Tickets Overview"
+        subtitle="Browse your submitted tickets"
+        activeLabel="Active My Tickets"
+        allLabel="All My Tickets"
+      />
+    );
   }
-
   return (
     <div className="min-h-screen bg-slate-100">
       <div className="relative overflow-hidden bg-[rgb(21,98,160)] pb-16">
@@ -181,13 +189,25 @@ export default function MyTicketsPage() {
               </div>
 
               <div className="mt-6 space-y-4">
-                <div className="grid grid-cols-2 gap-3 rounded-[24px] bg-slate-100 p-1.5">
+                <div className="relative grid grid-cols-2 gap-1 rounded-[24px] bg-slate-100 p-1">
+                  <motion.div
+                    layout
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className="absolute bottom-1 top-1 w-[calc(50%-4px)] rounded-[20px] bg-white shadow-sm"
+                    style={{
+                      left: viewMode === "active" ? "4px" : "calc(50% + 2px)",
+                    }}
+                  />
+
                   <button
                     type="button"
-                    onClick={() => setViewMode("active")}
-                    className={`rounded-2xl px-4 py-3 text-sm font-semibold transition ${
+                    onClick={() => {
+                      setViewMode("active");
+                      setVisibleCount(PAGE_SIZE);
+                    }}
+                    className={`relative z-10 rounded-2xl px-4 py-3 text-sm font-semibold transition ${
                       viewMode === "active"
-                        ? "bg-white text-[rgb(21,98,160)] shadow-sm"
+                        ? "text-[rgb(21,98,160)]"
                         : "text-slate-500"
                     }`}
                   >
@@ -196,17 +216,19 @@ export default function MyTicketsPage() {
 
                   <button
                     type="button"
-                    onClick={() => setViewMode("all")}
-                    className={`rounded-2xl px-4 py-3 text-sm font-semibold transition ${
+                    onClick={() => {
+                      setViewMode("all");
+                      setVisibleCount(PAGE_SIZE);
+                    }}
+                    className={`relative z-10 rounded-2xl px-4 py-3 text-sm font-semibold transition ${
                       viewMode === "all"
-                        ? "bg-white text-[rgb(21,98,160)] shadow-sm"
+                        ? "text-[rgb(21,98,160)]"
                         : "text-slate-500"
                     }`}
                   >
                     All My Tickets
                   </button>
                 </div>
-
                 <div className="flex items-center gap-3 rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-3 transition-all duration-200 focus-within:border-[rgb(21,98,160)] focus-within:bg-white focus-within:ring-4 focus-within:ring-[rgb(21,98,160)]/10">
                   <Search size={18} className="text-slate-400" />
                   <input
@@ -266,7 +288,7 @@ export default function MyTicketsPage() {
                             duration: 0.2,
                             delay: Math.min(index, 5) * 0.03,
                           }}
-                          className="w-full rounded-[24px] border border-slate-200 bg-white p-4 text-left shadow-[0_10px_24px_rgba(15,23,42,0.05)] transition hover:-translate-y-[1px]"
+                          className="w-full rounded-[24px] border border-slate-200 bg-white p-4 text-left shadow-[0_10px_24px_rgba(15,23,42,0.05)] transition-all duration-200 hover:-translate-y-[2px] hover:shadow-md active:scale-[0.98]"
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 flex-1">

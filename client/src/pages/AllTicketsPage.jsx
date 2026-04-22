@@ -14,6 +14,8 @@ import Loader from "../components/Loader";
 import { getAllTickets } from "../services/ticketsApi";
 import useScrollToTopButton from "../hooks/useScrollToTopButton";
 import ScrollToTopButton from "../components/ScrollToTopButton";
+import TicketsPageSkeleton from "../components/TicketsPageSkeleton";
+
 const PAGE_SIZE = 20;
 const DUMMY_TICKETS = [
   {
@@ -390,7 +392,14 @@ export default function AllTicketsPage() {
   };
 
   if (loading) {
-    return <Loader />;
+    return (
+      <TicketsPageSkeleton
+        title="Tickets Overview"
+        subtitle="Browse and review tickets"
+        activeLabel="Active Tickets"
+        allLabel="All Tickets"
+      />
+    );
   }
 
   return (
@@ -456,31 +465,43 @@ export default function AllTicketsPage() {
               </div>
 
               <div className="mt-6 space-y-4">
-                <div className="grid grid-cols-2 gap-3 rounded-[24px] bg-slate-100 p-1.5">
+                <div className="relative grid grid-cols-2 gap-1 rounded-[24px] bg-slate-100 p-1">
+                  {/* Animated background */}
+                  <motion.div
+                    layout
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-[20px] bg-white shadow`}
+                    style={{
+                      left: viewMode === "active" ? "4px" : "calc(50% + 2px)",
+                    }}
+                  />
+
+                  {/* Active button */}
                   <button
                     type="button"
                     onClick={() => {
                       setViewMode("active");
                       setVisibleCount(PAGE_SIZE);
                     }}
-                    className={`rounded-2xl px-4 py-3 text-sm font-semibold transition ${
+                    className={`relative z-10 rounded-2xl px-4 py-3 text-sm font-semibold transition ${
                       viewMode === "active"
-                        ? "bg-white text-[rgb(21,98,160)] shadow-sm"
+                        ? "text-[rgb(21,98,160)]"
                         : "text-slate-500"
                     }`}
                   >
                     Active Tickets
                   </button>
 
+                  {/* All button */}
                   <button
                     type="button"
                     onClick={() => {
                       setViewMode("all");
                       setVisibleCount(PAGE_SIZE);
                     }}
-                    className={`rounded-2xl px-4 py-3 text-sm font-semibold transition ${
+                    className={`relative z-10 rounded-2xl px-4 py-3 text-sm font-semibold transition ${
                       viewMode === "all"
-                        ? "bg-white text-[rgb(21,98,160)] shadow-sm"
+                        ? "text-[rgb(21,98,160)]"
                         : "text-slate-500"
                     }`}
                   >
@@ -547,7 +568,7 @@ export default function AllTicketsPage() {
                             duration: 0.2,
                             delay: Math.min(index, 5) * 0.03,
                           }}
-                          className="w-full rounded-[24px] border border-slate-200 bg-white p-4 text-left shadow-[0_10px_24px_rgba(15,23,42,0.05)] transition hover:-translate-y-[1px]"
+                          className="w-full rounded-[24px] border border-slate-200 bg-white p-4 text-left shadow-[0_10px_24px_rgba(15,23,42,0.05)] transition-all duration-200 hover:-translate-y-[2px] hover:shadow-md active:scale-[0.98]"
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 flex-1">
