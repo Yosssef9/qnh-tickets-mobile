@@ -18,11 +18,9 @@ export async function getTicketById(ticketId) {
   return response.data;
 }
 
-export function getTicketAttachmentDownloadUrl(ticketId, attachmentId) {
+export function getTicketAttachmentDownloadUrl(fileUrl) {
   const base = import.meta.env.VITE_API_BASE_URL;
-  const token = localStorage.getItem("auth_token");
-
-  return `${base}/api/tickets/${ticketId}/attachments/${attachmentId}/download?token=${encodeURIComponent(token || "")}`;
+  return fileUrl ? `${base}${fileUrl}` : "";
 }
 /**
  * Step 1: Create ticket

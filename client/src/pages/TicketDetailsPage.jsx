@@ -15,10 +15,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import Loader from "../components/Loader";
 import useScrollToTopButton from "../hooks/useScrollToTopButton";
 import ScrollToTopButton from "../components/ScrollToTopButton";
+
 import {
   getTicketById,
   getTicketAttachmentDownloadUrl,
 } from "../services/ticketsApi";
+import TicketsPageSkeleton from "../components/TicketsPageSkeleton";
 
 function isImageFile(fileName = "") {
   return /\.(jpg|jpeg|png|gif|webp)$/i.test(fileName);
@@ -92,7 +94,14 @@ export default function TicketDetailsPage() {
   }, [ticket]);
 
   if (loading) {
-    return <Loader />;
+    return (
+      <TicketsPageSkeleton
+        title="Ticket Details"
+        subtitle="Loading ticket details..."
+        activeLabel="Images"
+        allLabel="Attachments"
+      />
+    );
   }
 
   if (!ticket) {
@@ -329,8 +338,7 @@ export default function TicketDetailsPage() {
                   <div className="space-y-4">
                     {imageAttachments.map((att, index) => {
                       const downloadUrl = getTicketAttachmentDownloadUrl(
-                        ticket.id,
-                        att.id,
+                        att.file_url,
                       );
 
                       return (
@@ -387,8 +395,7 @@ export default function TicketDetailsPage() {
                   <div className="space-y-3">
                     {fileAttachments.map((att, index) => {
                       const downloadUrl = getTicketAttachmentDownloadUrl(
-                        ticket.id,
-                        att.id,
+                        att.file_url,
                       );
 
                       return (
