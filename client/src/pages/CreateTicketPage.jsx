@@ -282,6 +282,7 @@ export default function CreateTicketPage() {
                       type="file"
                       accept="image/*"
                       onChange={handleFileChange}
+                      capture="environment"
                       className="hidden"
                     />
                   </label>
