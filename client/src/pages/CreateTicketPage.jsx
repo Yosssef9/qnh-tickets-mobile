@@ -14,6 +14,7 @@ import {
   createAndAssignTicket,
   getAvailableTechnicians,
 } from "../services/ticketsApi";
+import CreateTicketSkeleton from "../components/CreateTicketSkeleton";
 
 export default function CreateTicketPage() {
   const navigate = useNavigate();
@@ -101,7 +102,9 @@ export default function CreateTicketPage() {
       setSubmitting(false);
     }
   };
-
+  if (loadingTechs) {
+    return <CreateTicketSkeleton />;
+  }
   return (
     <div className="min-h-screen bg-slate-100">
       <div className="relative overflow-hidden bg-[rgb(21,98,160)] pb-16">
