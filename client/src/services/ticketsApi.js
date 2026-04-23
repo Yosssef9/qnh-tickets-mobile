@@ -42,7 +42,12 @@ export function getTicketAttachmentDownloadUrl(filePath) {
 /**
  * Step 1: Create ticket
  */
-export async function createMobileTicket({ title, description, imageFile }) {
+export async function createMobileTicket({
+  title,
+  description,
+  imageFile,
+  priority,
+}) {
   const formData = new FormData();
 
   const finalDescription =
@@ -53,7 +58,7 @@ export async function createMobileTicket({ title, description, imageFile }) {
   formData.append("category", "IT Support");
   formData.append("source", "ticket");
   formData.append("ticket_type_id", 7);
-
+  formData.append("priority", priority || "Medium");
   if (imageFile) {
     formData.append("attachments", imageFile);
   }
@@ -84,12 +89,14 @@ export async function assignTechnician(ticketId, technicianCode) {
   description,
   technicianCode,
   imageFile,
+  priority,
 }) {
   // Step 1: Create
   const createRes = await createMobileTicket({
     title,
     description,
     imageFile,
+    priority,
   });
 
   if (!createRes?.success) {

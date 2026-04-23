@@ -24,7 +24,9 @@ export default function CreateTicketPage() {
   const [description, setDescription] = useState("");
   const [technician, setTechnician] = useState("");
   const [imageFile, setImageFile] = useState(null);
-
+  const [priority, setPriority] = useState("Medium");
+  const [openPriority, setOpenPriority] = useState(false);
+  const priorityRef = useRef(null);
   const [technicians, setTechnicians] = useState([]);
   const [loadingTechs, setLoadingTechs] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -32,6 +34,7 @@ export default function CreateTicketPage() {
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
   useClickOutside(dropdownRef, () => setOpenDropdown(false));
+  useClickOutside(priorityRef, () => setOpenPriority(false));
   useEffect(() => {
     const loadTechnicians = async () => {
       try {
@@ -75,6 +78,7 @@ export default function CreateTicketPage() {
         description,
         technicianCode: technician,
         imageFile,
+        priority,
       });
 
       if (!data?.success) {
@@ -100,6 +104,35 @@ export default function CreateTicketPage() {
       setMessageType("error");
     } finally {
       setSubmitting(false);
+    }
+  };
+  const priorities = ["Low", "Medium", "High", "Critical"];
+  const getPriorityStyle = (p) => {
+    switch (p) {
+      case "Low":
+        return "bg-slate-100 text-slate-600";
+      case "Medium":
+        return "bg-amber-100 text-amber-700";
+      case "High":
+        return "bg-orange-100 text-orange-700";
+      case "Critical":
+        return "bg-red-100 text-red-700";
+      default:
+        return "bg-slate-100 text-slate-600";
+    }
+  };
+  const getPriorityIcon = (p) => {
+    switch (p) {
+      case "Low":
+        return "🟢";
+      case "Medium":
+        return "🟡";
+      case "High":
+        return "🟠";
+      case "Critical":
+        return "🚨";
+      default:
+        return "";
     }
   };
   if (loadingTechs) {
@@ -269,7 +302,67 @@ export default function CreateTicketPage() {
                     )}
                   </div>
                 </div>
+                {/* Priority */}
+                <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+                  <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                    Priority (Optional)
+                  </label>
 
+                  <div ref={priorityRef} className="relative">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenPriority((prev) => !prev);
+                      }}
+                      className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-sm text-slate-800 transition focus:border-[rgb(21,98,160)] focus:ring-4 focus:ring-[rgb(21,98,160)]/10"
+                    >
+                      <span
+                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${getPriorityStyle(priority)}`}
+                      >
+                        {priority}
+                      </span>
+                      <ChevronRight
+                        size={18}
+                        className={`transition ${openPriority ? "rotate-90" : ""}`}
+                      />
+                    </button>
+
+                    {openPriority && (
+                      <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_20px_40px_rgba(15,23,42,0.12)]">
+                        {priorities.map((p) => (
+                          <button
+                            key={p}
+                            type="button"
+                            onClick={() => {
+                              setPriority(p);
+                              setOpenPriority(false);
+                            }}
+                            className={`flex w-full items-center justify-between px-4 py-3 text-sm transition hover:bg-slate-50 ${
+                              priority === p
+                                ? "bg-[rgb(21,98,160)]/10 text-[rgb(21,98,160)] font-semibold"
+                                : "text-slate-700"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span>{getPriorityIcon(p)}</span>
+
+                              <span
+                                className={`px-2 py-1 rounded-md text-xs font-semibold ${getPriorityStyle(p)}`}
+                              >
+                                {p}
+                              </span>
+                            </div>
+
+                            {priority === p && (
+                              <span className="text-xs">✓</span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
                 {/* Optional image */}
                 <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
                   <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
