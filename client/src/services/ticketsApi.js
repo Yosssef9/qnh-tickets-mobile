@@ -41,12 +41,12 @@ export function getTicketAttachmentDownloadUrl(filePath) {
 }
 /**
  * Step 1: Create ticket
- */
-export async function createMobileTicket({
+ */ export async function createMobileTicket({
   title,
   description,
   imageFile,
   priority,
+  technicianCode,
 }) {
   const formData = new FormData();
 
@@ -59,6 +59,11 @@ export async function createMobileTicket({
   formData.append("source", "ticket");
   formData.append("ticket_type_id", 7);
   formData.append("priority", priority || "Medium");
+
+  if (technicianCode) {
+    formData.append("assigned_to", technicianCode);
+  }
+
   if (imageFile) {
     formData.append("attachments", imageFile);
   }
@@ -83,40 +88,3 @@ export async function assignTechnician(ticketId, technicianCode) {
   return response.data;
 }
 
-/**
- */ export async function createAndAssignTicket({
-  title,
-  description,
-  technicianCode,
-  imageFile,
-  priority,
-}) {
-  // Step 1: Create
-  const createRes = await createMobileTicket({
-    title,
-    description,
-    imageFile,
-    priority,
-  });
-
-  if (!createRes?.success) {
-    throw new Error(createRes?.message || "Create ticket failed");
-  }
-
-  const ticketId = createRes.ticketId;
-
-  // ✅ Step 2: Assign ONLY if technician exists
-  if (technicianCode) {
-    const assignRes = await assignTechnician(ticketId, technicianCode);
-
-    if (!assignRes?.success) {
-      throw new Error(assignRes?.message || "Assign technician failed");
-    }
-  }
-
-  return {
-    success: true,
-    ticketId,
-    ticketNumber: createRes.ticketNumber,
-  };
-}

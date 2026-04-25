@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import {
   ClipboardList,
   PlusCircle,
@@ -8,78 +8,35 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getAllTickets, getMyTickets } from "../services/ticketsApi";
 import { useAuth } from "../context/AuthContext";
-import Loader from "../components/Loader";
+import EnableNotificationsButton from "../components/EnableNotificationsButton";
+import { useMyTickets, useAllTickets } from "../features/tickets/useTickets";
 
 export default function HomePage() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
-  const [myTicketsCount, setMyTicketsCount] = useState(0);
-  const [allTicketsCount, setAllTicketsCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    let isMounted = true;
+  const { data: myTickets = [], isLoading: myTicketsLoading } = useMyTickets();
+  const { data: allTickets = [], isLoading: allTicketsLoading } =
+    useAllTickets();
 
-    const loadCounts = async () => {
-      try {
-        setLoading(true);
+  const myTicketsCount = myTickets.length;
 
-        let myCount = 0;
-        let allCount = 0;
+  const allTicketsCount = useMemo(() => {
+    return allTickets.filter(
+      (t) => t.status !== "Closed" && t.status !== "Cancelled",
+    ).length;
+  }, [allTickets]);
 
-        try {
-          const myTicketsRes = await getMyTickets();
-          const myTickets = myTicketsRes?.data?.tickets || [];
-          myCount = Array.isArray(myTickets) ? myTickets.length : 0;
-        } catch (error) {
-          console.error("Failed to load my tickets:", error);
-        }
-
-        try {
-          const allTicketsRes = await getAllTickets();
-          const allTickets = allTicketsRes?.data?.tickets || [];
-
-          const filteredTickets = Array.isArray(allTickets)
-            ? allTickets.filter(
-                (t) => t.status !== "Closed" && t.status !== "Cancelled",
-              )
-            : [];
-
-          allCount = filteredTickets.length;
-        } catch (error) {
-          console.error("Failed to load all tickets:", error);
-        }
-
-        if (isMounted) {
-          setMyTicketsCount(myCount);
-          setAllTicketsCount(allCount);
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    loadCounts();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const countsLoading = myTicketsLoading || allTicketsLoading;
 
   const handleLogout = async () => {
     await logout();
     navigate("/login");
   };
 
-  if (loading) {
-    return <Loader />;
-  }
-
   const displayName = user?.userName || user?.name || user?.userCode || "User";
+
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -97,14 +54,26 @@ export default function HomePage() {
               <p className="text-xs font-medium uppercase tracking-[0.25em] text-white/75">
                 QNH Portal
               </p>
-              <h1 className="mt-2 truncate text-2xl font-extrabold">
-                {displayName}
-              </h1>
+
+              <div className="mt-2 flex items-center justify-between gap-3">
+                <h1 className="truncate text-2xl font-extrabold">
+                  {displayName}
+                </h1>
+
+                <EnableNotificationsButton />
+              </div>
               <p className="mt-1 text-sm text-white/80">
                 Ticket Portal Mobile Dashboard
               </p>
             </div>
-
+            {/* <button
+              onClick={() => {
+                localStorage.clear();
+                alert("Storage cleared");
+              }}
+            >
+              Reset Notifications
+            </button> */}
             <button
               onClick={handleLogout}
               className="flex shrink-0 items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-3 py-2 text-sm font-medium text-white backdrop-blur-md transition hover:bg-white/20"
@@ -144,9 +113,15 @@ export default function HomePage() {
                       </div>
                       <span className="text-sm font-medium">My Tickets</span>
                     </div>
-                    <p className="mt-3 text-3xl font-extrabold">
-                      {myTicketsCount}
-                    </p>
+                    {countsLoading ? (
+                      <div className="mt-3 flex h-[36px] items-center justify-center">
+                        <div className="h-7 w-7 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-3xl font-extrabold text-center">
+                        {myTicketsCount}
+                      </p>
+                    )}
                     <p className="mt-1 text-xs text-white/70">
                       Tickets created by you
                     </p>
@@ -161,9 +136,15 @@ export default function HomePage() {
                         All Active Tickets
                       </span>
                     </div>
-                    <p className="mt-3 text-3xl font-extrabold">
-                      {allTicketsCount}
-                    </p>
+                    {countsLoading ? (
+                      <div className="mt-3 flex h-[36px] items-center justify-center">
+                        <div className="h-7 w-7 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-3xl font-extrabold text-center">
+                        {allTicketsCount}
+                      </p>
+                    )}
                     <p className="mt-1 text-xs text-white/70">
                       Available in the system
                     </p>

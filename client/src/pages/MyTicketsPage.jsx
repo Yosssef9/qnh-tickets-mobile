@@ -14,15 +14,14 @@ import Loader from "../components/Loader";
 import useScrollToTopButton from "../hooks/useScrollToTopButton";
 import ScrollToTopButton from "../components/ScrollToTopButton";
 import TicketsPageSkeleton from "../components/TicketsPageSkeleton";
-
+import { useMyTickets } from "../features/tickets/useTickets";
 const PAGE_SIZE = 20;
 
 export default function MyTicketsPage() {
   const navigate = useNavigate();
   const { showScrollTop, scrollToTop } = useScrollToTopButton();
 
-  const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: tickets = [], isLoading: loading } = useMyTickets();
   const [viewMode, setViewMode] = useState("active");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -35,37 +34,6 @@ export default function MyTicketsPage() {
 
     return () => clearTimeout(timeout);
   }, [search]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadTickets = async () => {
-      try {
-        setLoading(true);
-        const res = await getMyTickets();
-        const items = res?.data?.tickets || [];
-
-        if (isMounted) {
-          setTickets(Array.isArray(items) ? items : []);
-        }
-      } catch (error) {
-        console.error("Failed to load my tickets:", error);
-        if (isMounted) {
-          setTickets([]);
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    loadTickets();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   const activeTickets = useMemo(() => {
     return tickets.filter(
@@ -136,7 +104,7 @@ export default function MyTicketsPage() {
         <div className="relative z-10 px-4 pt-8">
           <div className="flex items-center justify-between gap-3 text-white">
             <button
-                onClick={() => navigate("/")}
+              onClick={() => navigate("/")}
               className="flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-3 py-2 text-sm font-medium text-white backdrop-blur-md transition hover:bg-white/20"
             >
               <ArrowLeft size={16} />

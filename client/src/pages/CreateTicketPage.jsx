@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useState, useRef } from "react";
 import useClickOutside from "../hooks/useClickOutside";
 import {
   ArrowLeft,
@@ -11,47 +11,37 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
-  createAndAssignTicket,
-  getAvailableTechnicians,
-} from "../services/ticketsApi";
+  useAvailableTechnicians,
+  useCreateTicket,
+} from "../features/tickets/useTickets";
 import CreateTicketSkeleton from "../components/CreateTicketSkeleton";
 
 export default function CreateTicketPage() {
   const navigate = useNavigate();
+
   const [openDropdown, setOpenDropdown] = useState(false);
   const dropdownRef = useRef(null);
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [technician, setTechnician] = useState("");
   const [imageFile, setImageFile] = useState(null);
   const [priority, setPriority] = useState("Medium");
+
   const [openPriority, setOpenPriority] = useState(false);
   const priorityRef = useRef(null);
-  const [technicians, setTechnicians] = useState([]);
-  const [loadingTechs, setLoadingTechs] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
 
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
+
+  const { data: technicians = [], isLoading: loadingTechs } =
+    useAvailableTechnicians("IT Support");
+
+  const createTicketMutation = useCreateTicket();
+  const submitting = createTicketMutation.isPending;
+
   useClickOutside(dropdownRef, () => setOpenDropdown(false));
   useClickOutside(priorityRef, () => setOpenPriority(false));
-  useEffect(() => {
-    const loadTechnicians = async () => {
-      try {
-        setLoadingTechs(true);
-        const res = await getAvailableTechnicians("IT Support");
-        const techs = res?.data?.technicians || [];
-        setTechnicians(Array.isArray(techs) ? techs : []);
-      } catch (error) {
-        console.error("Failed to load technicians:", error);
-        setTechnicians([]);
-      } finally {
-        setLoadingTechs(false);
-      }
-    };
-
-    loadTechnicians();
-  }, []);
 
   const handleFileChange = (e) => {
     const file = e.target.files?.[0] || null;
@@ -71,9 +61,7 @@ export default function CreateTicketPage() {
     }
 
     try {
-      setSubmitting(true);
-
-      const data = await createAndAssignTicket({
+      const data = await createTicketMutation.mutateAsync({
         title,
         description,
         technicianCode: technician,
@@ -87,10 +75,12 @@ export default function CreateTicketPage() {
 
       setMessage(data.message || "Ticket created successfully");
       setMessageType("success");
+
       setTitle("");
       setDescription("");
       setTechnician("");
       setImageFile(null);
+      setPriority("Medium");
 
       setTimeout(() => {
         navigate("/tickets/my");
@@ -102,11 +92,11 @@ export default function CreateTicketPage() {
           "Failed to create ticket",
       );
       setMessageType("error");
-    } finally {
-      setSubmitting(false);
     }
   };
+
   const priorities = ["Low", "Medium", "High", "Critical"];
+
   const getPriorityStyle = (p) => {
     switch (p) {
       case "Low":
@@ -121,6 +111,7 @@ export default function CreateTicketPage() {
         return "bg-slate-100 text-slate-600";
     }
   };
+
   const getPriorityIcon = (p) => {
     switch (p) {
       case "Low":
@@ -135,9 +126,11 @@ export default function CreateTicketPage() {
         return "";
     }
   };
+
   if (loadingTechs) {
     return <CreateTicketSkeleton />;
   }
+
   return (
     <div className="min-h-screen bg-slate-100">
       <div className="relative overflow-hidden bg-[rgb(21,98,160)] pb-16">
@@ -165,7 +158,6 @@ export default function CreateTicketPage() {
 
           <div className="mt-6 rounded-[32px] border border-white/20 bg-white/12 p-3 shadow-[0_20px_60px_rgba(15,23,42,0.18)] backdrop-blur-xl">
             <div className="rounded-[28px] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
-              {/* Top intro */}
               <div className="rounded-[28px] bg-gradient-to-br from-[rgb(21,98,160)] to-[rgb(15,75,125)] p-5 text-white shadow-[0_18px_40px_rgba(21,98,160,0.28)]">
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -185,7 +177,6 @@ export default function CreateTicketPage() {
                 </div>
               </div>
 
-              {/* Form header */}
               <div className="mt-6 mb-4 px-1">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-[rgb(21,98,160)]/70">
                   Ticket Form
@@ -199,7 +190,6 @@ export default function CreateTicketPage() {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Title */}
                 <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
                   <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
                     <MessageSquareText size={16} />
@@ -214,7 +204,7 @@ export default function CreateTicketPage() {
                     required
                   />
                 </div>
-                {/* Description */}
+
                 <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
                   <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
                     <MessageSquareText size={16} />
@@ -230,15 +220,13 @@ export default function CreateTicketPage() {
                   />
                 </div>
 
-                {/* Technician */}
                 <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
                   <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
                     <UserRoundSearch size={16} />
                     Technician (Optional)
                   </label>
+
                   <div ref={dropdownRef} className="relative">
-                    {" "}
-                    {/* Selected value */}
                     <button
                       type="button"
                       onClick={(e) => {
@@ -254,7 +242,8 @@ export default function CreateTicketPage() {
                           : technician
                             ? technicians.find(
                                 (t) =>
-                                  (t.USER_CODE || t.username) === technician,
+                                  String(t.USER_CODE || t.username) ===
+                                  String(technician),
                               )?.USER_NAME || technician
                             : "Assign technician (optional)"}
                       </span>
@@ -264,7 +253,7 @@ export default function CreateTicketPage() {
                         className={`transition ${openDropdown ? "rotate-90" : ""}`}
                       />
                     </button>
-                    {/* Dropdown list */}
+
                     {openDropdown && !loadingTechs && (
                       <div className="absolute z-50 mt-2 max-h-60 w-full overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-[0_20px_40px_rgba(15,23,42,0.12)]">
                         {technicians.length === 0 ? (
@@ -302,7 +291,7 @@ export default function CreateTicketPage() {
                     )}
                   </div>
                 </div>
-                {/* Priority */}
+
                 <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
                   <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
                     Priority (Optional)
@@ -322,6 +311,7 @@ export default function CreateTicketPage() {
                       >
                         {priority}
                       </span>
+
                       <ChevronRight
                         size={18}
                         className={`transition ${openPriority ? "rotate-90" : ""}`}
@@ -363,7 +353,7 @@ export default function CreateTicketPage() {
                     )}
                   </div>
                 </div>
-                {/* Optional image */}
+
                 <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
                   <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
                     <ImagePlus size={16} />
@@ -394,7 +384,6 @@ export default function CreateTicketPage() {
                   </label>
                 </div>
 
-                {/* Message */}
                 {message && (
                   <div
                     className={`rounded-2xl border px-4 py-3 text-sm font-medium ${
@@ -407,7 +396,6 @@ export default function CreateTicketPage() {
                   </div>
                 )}
 
-                {/* Submit */}
                 <button
                   type="submit"
                   disabled={submitting}

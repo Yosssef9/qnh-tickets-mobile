@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useMemo } from "react";
+import { motion } from "framer-motion";
 import {
   ArrowLeft,
   CalendarDays,
@@ -12,15 +12,11 @@ import {
   UserRound,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-import Loader from "../components/Loader";
 import useScrollToTopButton from "../hooks/useScrollToTopButton";
 import ScrollToTopButton from "../components/ScrollToTopButton";
-
-import {
-  getTicketById,
-  getTicketAttachmentDownloadUrl,
-} from "../services/ticketsApi";
 import TicketsPageSkeleton from "../components/TicketsPageSkeleton";
+import { getTicketAttachmentDownloadUrl } from "../services/ticketsApi";
+import { useTicketDetails } from "../features/tickets/useTickets";
 
 function isImageFile(fileName = "") {
   return /\.(jpg|jpeg|png|gif|webp)$/i.test(fileName);
@@ -42,6 +38,7 @@ function getStatusClasses(status) {
       return "bg-slate-100 text-slate-700";
   }
 }
+
 function getPriorityClasses(priority) {
   switch (String(priority || "").toLowerCase()) {
     case "critical":
@@ -56,30 +53,14 @@ function getPriorityClasses(priority) {
       return "bg-slate-100 text-slate-700 ring-1 ring-slate-200";
   }
 }
+
 export default function TicketDetailsPage() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { showScrollTop, scrollToTop } = useScrollToTopButton();
 
-  const [ticket, setTicket] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadTicket = async () => {
-      try {
-        setLoading(true);
-        const res = await getTicketById(id);
-        setTicket(res?.ticket || null);
-      } catch (error) {
-        console.error("Failed to load ticket:", error);
-        setTicket(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadTicket();
-  }, [id]);
+  const { data, isLoading: loading } = useTicketDetails(id);
+  const ticket = data?.ticket || null;
 
   const imageAttachments = useMemo(() => {
     return (ticket?.attachments || []).filter((att) =>
@@ -178,7 +159,6 @@ export default function TicketDetailsPage() {
 
           <div className="mt-6 rounded-[32px] border border-white/20 bg-white/12 p-3 shadow-[0_20px_60px_rgba(15,23,42,0.18)] backdrop-blur-xl">
             <div className="rounded-[28px] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
-              {/* Header Card */}
               <div className="rounded-[28px] bg-gradient-to-br from-[rgb(21,98,160)] to-[rgb(15,75,125)] p-5 text-white shadow-[0_18px_40px_rgba(21,98,160,0.28)]">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
@@ -211,7 +191,6 @@ export default function TicketDetailsPage() {
                 </div>
               </div>
 
-              {/* Info Grid */}
               <div className="mt-6 grid grid-cols-1 gap-4">
                 <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
                   <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
@@ -220,21 +199,8 @@ export default function TicketDetailsPage() {
                   </div>
 
                   <div className="space-y-3 text-sm">
-                    <div className="flex items-start justify-between gap-4">
-                      <span className="text-slate-500">Category</span>
-                      <span className="text-right text-sm font-semibold text-slate-700">
-                        {" "}
-                        {ticket.category || "-"}
-                      </span>
-                    </div>
-
-                    <div className="flex items-start justify-between gap-4">
-                      <span className="text-slate-500">Type</span>
-                      <span className="text-right text-sm font-semibold text-slate-700">
-                        {" "}
-                        {ticket.ticket_type_description || "-"}
-                      </span>
-                    </div>
+                    <InfoRow label="Category" value={ticket.category} />
+                    <InfoRow label="Type" value={ticket.ticket_type_description} />
 
                     <div className="flex items-start justify-between gap-4">
                       <span className="text-slate-500">Priority</span>
@@ -246,13 +212,8 @@ export default function TicketDetailsPage() {
                         {ticket.priority || "-"}
                       </span>
                     </div>
-                    <div className="flex items-start justify-between gap-4">
-                      <span className="text-slate-500">Subcategory</span>
-                      <span className="text-right text-sm font-semibold text-slate-700">
-                        {" "}
-                        {ticket.subcategory_name || "-"}
-                      </span>
-                    </div>
+
+                    <InfoRow label="Subcategory" value={ticket.subcategory_name} />
                   </div>
                 </div>
 
@@ -263,30 +224,20 @@ export default function TicketDetailsPage() {
                   </div>
 
                   <div className="space-y-3 text-sm">
-                    <div className="flex items-start justify-between gap-4">
-                      <span className="text-slate-500">Requester</span>
-                      <span className="text-right text-sm font-semibold text-slate-700">
-                        {" "}
-                        {ticket.created_by_name || ticket.created_by || "-"}
-                      </span>
-                    </div>
-
-                    <div className="flex items-start justify-between gap-4">
-                      <span className="text-slate-500">Assigned To</span>
-                      <span className="text-right text-sm font-semibold text-slate-700">
-                        {" "}
-                        {ticket.assigned_to_name || ticket.assigned_to || "-"}
-                      </span>
-                    </div>
+                    <InfoRow
+                      label="Requester"
+                      value={ticket.created_by_name || ticket.created_by}
+                    />
+                    <InfoRow
+                      label="Assigned To"
+                      value={ticket.assigned_to_name || ticket.assigned_to}
+                    />
 
                     {ticket.closed_by_name || ticket.closed_by ? (
-                      <div className="flex items-start justify-between gap-4">
-                        <span className="text-slate-500">Closed By</span>
-                        <span className="text-right text-sm font-semibold text-slate-700">
-                          {" "}
-                          {ticket.closed_by_name || ticket.closed_by}
-                        </span>
-                      </div>
+                      <InfoRow
+                        label="Closed By"
+                        value={ticket.closed_by_name || ticket.closed_by}
+                      />
                     ) : null}
                   </div>
                 </div>
@@ -298,253 +249,262 @@ export default function TicketDetailsPage() {
                   </div>
 
                   <div className="space-y-3 text-sm">
-                    <div className="flex items-start justify-between gap-4">
-                      <span className="text-slate-500">Created</span>
-                      <span className="text-right text-sm font-semibold text-slate-700">
-                        {" "}
-                        {ticket.created_at || "-"}
-                      </span>
-                    </div>
-
-                    <div className="flex items-start justify-between gap-4">
-                      <span className="text-slate-500">Due Date</span>
-                      <span className="text-right text-sm font-semibold text-slate-700">
-                        {" "}
-                        {ticket.due_date || "-"}
-                      </span>
-                    </div>
+                    <InfoRow label="Created" value={ticket.created_at} />
+                    <InfoRow label="Due Date" value={ticket.due_date} />
 
                     {ticket.closed_at ? (
-                      <div className="flex items-start justify-between gap-4">
-                        <span className="text-slate-500">Closed At</span>
-                        <span className="text-right text-sm font-semibold text-slate-700">
-                          {" "}
-                          {ticket.closed_at}
-                        </span>
-                      </div>
+                      <InfoRow label="Closed At" value={ticket.closed_at} />
                     ) : null}
                   </div>
                 </div>
               </div>
 
-              {/* Image Attachments */}
-              <div className="mt-6 rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
-                <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
-                  <ImageIcon size={16} />
-                  Images
-                </div>
+              <AttachmentImages attachments={imageAttachments} />
 
-                {imageAttachments.length ? (
-                  <div className="space-y-4">
-                    {imageAttachments.map((att, index) => {
-                      const downloadUrl = getTicketAttachmentDownloadUrl(
-                        att.file_url || att.file_path,
-                      );
+              <AttachmentFiles attachments={fileAttachments} />
 
-                      return (
-                        <motion.a
-                          key={att.id}
-                          href={downloadUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{
-                            duration: 0.2,
-                            delay: Math.min(index, 4) * 0.03,
-                          }}
-                          className="block overflow-hidden rounded-[22px] border border-slate-200 bg-slate-50"
-                        >
-                          <img
-                            src={downloadUrl}
-                            alt={att.file_name}
-                            className="h-48 w-full object-cover"
-                          />
+              <NotesSection notes={ticket.notes || []} />
 
-                          <div className="flex items-center justify-between gap-3 p-3">
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-medium text-slate-800">
-                                {att.file_name}
-                              </p>
-                              <p className="mt-1 text-xs text-slate-500">
-                                Uploaded by {att.uploaded_by_name || "-"}
-                              </p>
-                            </div>
-
-                            <div className="rounded-xl bg-[rgb(21,98,160)]/10 px-3 py-2 text-xs font-semibold text-[rgb(21,98,160)]">
-                              View
-                            </div>
-                          </div>
-                        </motion.a>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-sm text-slate-500">No images attached</p>
-                )}
-              </div>
-
-              {/* Other Attachments */}
-              <div className="mt-6 rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
-                <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
-                  <Paperclip size={16} />
-                  Other Attachments
-                </div>
-
-                {fileAttachments.length ? (
-                  <div className="space-y-3">
-                    {fileAttachments.map((att, index) => {
-                      const downloadUrl = getTicketAttachmentDownloadUrl(
-                        att.file_url || att.file_path,
-                      );
-
-                      return (
-                        <motion.a
-                          key={att.id}
-                          href={downloadUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{
-                            duration: 0.2,
-                            delay: Math.min(index, 4) * 0.03,
-                          }}
-                          className="flex items-center justify-between gap-3 rounded-[22px] border border-slate-200 bg-slate-50 p-3"
-                        >
-                          <div className="min-w-0 flex items-center gap-3">
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[rgb(21,98,160)]/10 text-[rgb(21,98,160)]">
-                              <FileText size={18} />
-                            </div>
-
-                            <div className="min-w-0">
-                              <p className="truncate text-sm font-medium text-slate-800">
-                                {att.file_name}
-                              </p>
-                              <p className="mt-1 text-xs text-slate-500">
-                                Uploaded by {att.uploaded_by_name || "-"}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
-                            <Download size={18} />
-                          </div>
-                        </motion.a>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-sm text-slate-500">No other attachments</p>
-                )}
-              </div>
-
-              {/* Notes */}
-              <div className="mt-6 rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
-                <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
-                  <FileText size={16} />
-                  Notes
-                </div>
-
-                {ticket.notes?.length ? (
-                  <div className="space-y-3">
-                    {ticket.notes.map((note, index) => (
-                      <motion.div
-                        key={note.id}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                          duration: 0.2,
-                          delay: Math.min(index, 4) * 0.03,
-                        }}
-                        className="rounded-[22px] border border-slate-200 bg-slate-50 p-3"
-                      >
-                        <div className="flex items-center justify-between gap-3">
-                          <p className="text-sm font-medium text-slate-800">
-                            {note.created_by_name || note.created_by || "-"}
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {note.created_at || "-"}
-                          </p>
-                        </div>
-
-                        <p className="mt-2 text-sm leading-6 text-slate-600">
-                          {note.note_text || "-"}
-                        </p>
-                      </motion.div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-slate-500">No notes available</p>
-                )}
-              </div>
-
-              {/* History */}
-              <div className="mt-6 rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
-                <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
-                  <FileText size={16} />
-                  History
-                </div>
-
-                {ticket.history?.length ? (
-                  <div className="space-y-3">
-                    {ticket.history.map((item, index) => (
-                      <motion.div
-                        key={item.id}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                          duration: 0.2,
-                          delay: Math.min(index, 4) * 0.03,
-                        }}
-                        className="rounded-[22px] border border-slate-200 bg-slate-50 p-3"
-                      >
-                        <div className="flex items-center justify-between gap-3">
-                          <p className="text-sm font-medium text-slate-800">
-                            {item.change_type || "-"}
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {item.changed_at || "-"}
-                          </p>
-                        </div>
-
-                        <p className="mt-1 text-xs text-slate-500">
-                          By {item.changed_by_name || item.changed_by || "-"}
-                        </p>
-
-                        {(item.old_value || item.new_value) && (
-                          <div className="mt-2 text-sm text-slate-600">
-                            {item.old_value ? (
-                              <p>
-                                <span className="font-medium text-slate-700">
-                                  From:
-                                </span>{" "}
-                                {item.old_value}
-                              </p>
-                            ) : null}
-                            {item.new_value ? (
-                              <p className="mt-1">
-                                <span className="font-medium text-slate-700">
-                                  To:
-                                </span>{" "}
-                                {item.new_value}
-                              </p>
-                            ) : null}
-                          </div>
-                        )}
-                      </motion.div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-slate-500">No history available</p>
-                )}
-              </div>
+              <HistorySection history={ticket.history || []} />
             </div>
           </div>
         </div>
       </div>
 
       <ScrollToTopButton show={showScrollTop} onClick={scrollToTop} />
+    </div>
+  );
+}
+
+function InfoRow({ label, value }) {
+  return (
+    <div className="flex items-start justify-between gap-4">
+      <span className="text-slate-500">{label}</span>
+      <span className="text-right text-sm font-semibold text-slate-700">
+        {value || "-"}
+      </span>
+    </div>
+  );
+}
+
+function AttachmentImages({ attachments }) {
+  return (
+    <div className="mt-6 rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+      <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
+        <ImageIcon size={16} />
+        Images
+      </div>
+
+      {attachments.length ? (
+        <div className="space-y-4">
+          {attachments.map((att, index) => {
+            const downloadUrl = getTicketAttachmentDownloadUrl(
+              att.file_url || att.file_path,
+            );
+
+            return (
+              <motion.a
+                key={att.id}
+                href={downloadUrl}
+                target="_blank"
+                rel="noreferrer"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.2,
+                  delay: Math.min(index, 4) * 0.03,
+                }}
+                className="block overflow-hidden rounded-[22px] border border-slate-200 bg-slate-50"
+              >
+                <img
+                  src={downloadUrl}
+                  alt={att.file_name}
+                  className="h-48 w-full object-cover"
+                />
+
+                <div className="flex items-center justify-between gap-3 p-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-slate-800">
+                      {att.file_name}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Uploaded by {att.uploaded_by_name || "-"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl bg-[rgb(21,98,160)]/10 px-3 py-2 text-xs font-semibold text-[rgb(21,98,160)]">
+                    View
+                  </div>
+                </div>
+              </motion.a>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="text-sm text-slate-500">No images attached</p>
+      )}
+    </div>
+  );
+}
+
+function AttachmentFiles({ attachments }) {
+  return (
+    <div className="mt-6 rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+      <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
+        <Paperclip size={16} />
+        Other Attachments
+      </div>
+
+      {attachments.length ? (
+        <div className="space-y-3">
+          {attachments.map((att, index) => {
+            const downloadUrl = getTicketAttachmentDownloadUrl(
+              att.file_url || att.file_path,
+            );
+
+            return (
+              <motion.a
+                key={att.id}
+                href={downloadUrl}
+                target="_blank"
+                rel="noreferrer"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.2,
+                  delay: Math.min(index, 4) * 0.03,
+                }}
+                className="flex items-center justify-between gap-3 rounded-[22px] border border-slate-200 bg-slate-50 p-3"
+              >
+                <div className="min-w-0 flex items-center gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[rgb(21,98,160)]/10 text-[rgb(21,98,160)]">
+                    <FileText size={18} />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-slate-800">
+                      {att.file_name}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Uploaded by {att.uploaded_by_name || "-"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
+                  <Download size={18} />
+                </div>
+              </motion.a>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="text-sm text-slate-500">No other attachments</p>
+      )}
+    </div>
+  );
+}
+
+function NotesSection({ notes }) {
+  return (
+    <div className="mt-6 rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+      <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
+        <FileText size={16} />
+        Notes
+      </div>
+
+      {notes.length ? (
+        <div className="space-y-3">
+          {notes.map((note, index) => (
+            <motion.div
+              key={note.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.2,
+                delay: Math.min(index, 4) * 0.03,
+              }}
+              className="rounded-[22px] border border-slate-200 bg-slate-50 p-3"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-medium text-slate-800">
+                  {note.created_by_name || note.created_by || "-"}
+                </p>
+                <p className="text-xs text-slate-500">
+                  {note.created_at || "-"}
+                </p>
+              </div>
+
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                {note.note_text || "-"}
+              </p>
+            </motion.div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-slate-500">No notes available</p>
+      )}
+    </div>
+  );
+}
+
+function HistorySection({ history }) {
+  return (
+    <div className="mt-6 rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+      <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
+        <FileText size={16} />
+        History
+      </div>
+
+      {history.length ? (
+        <div className="space-y-3">
+          {history.map((item, index) => (
+            <motion.div
+              key={item.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.2,
+                delay: Math.min(index, 4) * 0.03,
+              }}
+              className="rounded-[22px] border border-slate-200 bg-slate-50 p-3"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-medium text-slate-800">
+                  {item.change_type || "-"}
+                </p>
+                <p className="text-xs text-slate-500">
+                  {item.changed_at || "-"}
+                </p>
+              </div>
+
+              <p className="mt-1 text-xs text-slate-500">
+                By {item.changed_by_name || item.changed_by || "-"}
+              </p>
+
+              {(item.old_value || item.new_value) && (
+                <div className="mt-2 text-sm text-slate-600">
+                  {item.old_value ? (
+                    <p>
+                      <span className="font-medium text-slate-700">From:</span>{" "}
+                      {item.old_value}
+                    </p>
+                  ) : null}
+
+                  {item.new_value ? (
+                    <p className="mt-1">
+                      <span className="font-medium text-slate-700">To:</span>{" "}
+                      {item.new_value}
+                    </p>
+                  ) : null}
+                </div>
+              )}
+            </motion.div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-slate-500">No history available</p>
+      )}
     </div>
   );
 }

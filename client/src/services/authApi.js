@@ -14,7 +14,13 @@ export async function getMeRequest() {
   return response.data;
 }
 
-export async function logoutRequest() {
+export async function logoutRequest(userId) {
   const response = await api.post("/api/auth/logout");
+
+  // ✅ remove saved FCM token from localStorage
+  if (userId) {
+    localStorage.removeItem(`fcm_token_user_${userId}`);
+  }
+
   return response.data;
 }

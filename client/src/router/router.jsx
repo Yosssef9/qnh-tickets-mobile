@@ -1,55 +1,76 @@
+import { lazy, Suspense } from "react";
 import { createBrowserRouter } from "react-router-dom";
-import LoginPage from "../pages/LoginPage";
-import HomePage from "../pages/HomePage";
 import ProtectedRoute from "../components/ProtectedRoute";
-import CreateTicketPage from "../pages/CreateTicketPage";
-import AllTicketsPage from "../pages/AllTicketsPage";
-import MyTicketsPage from "../pages/MyTicketsPage";
-import TicketDetailsPage from "../pages/TicketDetailsPage";
+import NotificationBootstrap from "../providers/NotificationBootstrap";
+import Loader from "../components/Loader";
+
+const LoginPage = lazy(() => import("../pages/LoginPage"));
+const HomePage = lazy(() => import("../pages/HomePage"));
+const CreateTicketPage = lazy(() => import("../pages/CreateTicketPage"));
+const AllTicketsPage = lazy(() => import("../pages/AllTicketsPage"));
+const MyTicketsPage = lazy(() => import("../pages/MyTicketsPage"));
+const TicketDetailsPage = lazy(() => import("../pages/TicketDetailsPage"));
+
+function PageLoader({ children }) {
+  return <Suspense fallback={<Loader />}>{children}</Suspense>;
+}
+
+function ProtectedPage({ children }) {
+  return (
+    <ProtectedRoute>
+      <NotificationBootstrap />
+      <PageLoader>{children}</PageLoader>
+    </ProtectedRoute>
+  );
+}
 
 const router = createBrowserRouter([
   {
     path: "/login",
-    element: <LoginPage />,
+    element: (
+      <PageLoader>
+        <LoginPage />
+      </PageLoader>
+    ),
   },
   {
     path: "/",
     element: (
-      <ProtectedRoute>
+      <ProtectedPage>
         <HomePage />
-      </ProtectedRoute>
+      </ProtectedPage>
     ),
   },
   {
     path: "/tickets/create",
     element: (
-      <ProtectedRoute>
+      <ProtectedPage>
         <CreateTicketPage />
-      </ProtectedRoute>
+      </ProtectedPage>
     ),
   },
   {
     path: "/tickets/all",
     element: (
-      <ProtectedRoute>
+      <ProtectedPage>
         <AllTicketsPage />
-      </ProtectedRoute>
+      </ProtectedPage>
     ),
   },
   {
     path: "/tickets/my",
     element: (
-      <ProtectedRoute>
+      <ProtectedPage>
         <MyTicketsPage />
-      </ProtectedRoute>
+      </ProtectedPage>
     ),
   },
   {
     path: "/tickets/:id",
     element: (
-      <ProtectedRoute>
+      <ProtectedPage>
         <TicketDetailsPage />
-      </ProtectedRoute>
+      </ProtectedPage>
     ),
   },
 ]);
