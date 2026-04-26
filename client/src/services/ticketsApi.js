@@ -57,9 +57,7 @@ export function getTicketAttachmentDownloadUrl(filePath) {
   formData.append("description", finalDescription);
   formData.append("category", "IT Support");
   formData.append("source", "ticket");
-  formData.append("ticket_type_id", 7);
   formData.append("priority", priority || "Medium");
-
   if (technicianCode) {
     formData.append("assigned_to", technicianCode);
   }
@@ -71,6 +69,7 @@ export function getTicketAttachmentDownloadUrl(filePath) {
   const response = await api.post("/api/tickets/create", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
+      "x-client": "mobile",
     },
   });
 
@@ -87,4 +86,3 @@ export async function assignTechnician(ticketId, technicianCode) {
 
   return response.data;
 }
-
