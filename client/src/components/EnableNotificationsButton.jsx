@@ -30,7 +30,19 @@ export default function EnableNotificationsButton() {
 
       setLoading(true);
 
-      const permission = await Notification.requestPermission();
+      if (!("Notification" in window)) {
+        setEnabled(false);
+        alert("Notifications are not supported on this browser/device.");
+        return;
+      }
+
+      if (!("serviceWorker" in navigator)) {
+        setEnabled(false);
+        alert("Service Worker is not supported on this browser/device.");
+        return;
+      }
+
+      const permission = await window.Notification.requestPermission();
 
       if (permission !== "granted") {
         setEnabled(false);
