@@ -32,7 +32,9 @@ export default function EnableNotificationsButton() {
 
       if (!("Notification" in window)) {
         setEnabled(false);
-        alert("Notifications are not supported on this browser/device.");
+        alert(
+          "On iPhone: Open this site in Safari → Share → Add to Home Screen → then open from the icon to enable notifications.",
+        );
         return;
       }
 

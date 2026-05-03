@@ -31,7 +31,7 @@ messaging.onBackgroundMessage((payload) => {
   const options = {
     body: payload.data?.body || "",
     icon: "/icon-192.png",
-    badge: "/badge-72.png",
+    badge: "/icon-192.png",
     // badge: "/badge-72.png",
     data: {
       url: payload.data?.url || "/",

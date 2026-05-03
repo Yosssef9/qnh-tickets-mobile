@@ -28,8 +28,7 @@ export async function enableNotifications(user) {
   const savedToken = localStorage.getItem(storageKey);
 
   if (savedToken !== token) {
-    await saveFcmToken({ token });
-    localStorage.setItem(storageKey, token);
+await saveFcmToken(token);    localStorage.setItem(storageKey, token);
   }
 
   return {

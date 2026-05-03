@@ -6,12 +6,10 @@ import {
   CircleAlert,
   Search,
   Ticket,
-  ArrowUp,
   Paperclip,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import Loader from "../components/Loader";
-import { getAllTickets } from "../services/ticketsApi";
+import { useAllTickets } from "../features/tickets/useTickets";
 import useScrollToTopButton from "../hooks/useScrollToTopButton";
 import ScrollToTopButton from "../components/ScrollToTopButton";
 import TicketsPageSkeleton from "../components/TicketsPageSkeleton";
@@ -21,8 +19,14 @@ const PAGE_SIZE = 20;
 export default function AllTicketsPage() {
   const navigate = useNavigate();
   const { showScrollTop, scrollToTop } = useScrollToTopButton();
-  const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(true);
+
+  const {
+    data: tickets = [],
+    isLoading: loading,
+    isError,
+    error,
+  } = useAllTickets();
+
   const [viewMode, setViewMode] = useState("active");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -35,35 +39,6 @@ export default function AllTicketsPage() {
 
     return () => clearTimeout(timeout);
   }, [search]);
-
-  useEffect(() => {
-    // const loadTickets = async () => {
-    //   setLoading(true);
-
-    //   setTimeout(() => {
-    //     setTickets(DUMMY_TICKETS);
-    //     setLoading(false);
-    //   }, 800);
-    // };
-    const loadTickets = async () => {
-      try {
-        setLoading(true);
-
-        const res = await getAllTickets();
-
-        const items = res?.data?.tickets || [];
-
-        setTickets(Array.isArray(items) ? items : []);
-      } catch (error) {
-        console.error("Failed to load tickets:", error);
-        setTickets([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadTickets();
-  }, []);
 
   const activeTickets = useMemo(() => {
     return tickets.filter(
@@ -79,27 +54,13 @@ export default function AllTicketsPage() {
 
     return source.filter((t) => {
       return (
-        String(t.ticket_number || "")
-          .toLowerCase()
-          .includes(q) ||
-        String(t.title || "")
-          .toLowerCase()
-          .includes(q) ||
-        String(t.description || "")
-          .toLowerCase()
-          .includes(q) ||
-        String(t.created_by_name || "")
-          .toLowerCase()
-          .includes(q) ||
-        String(t.category || "")
-          .toLowerCase()
-          .includes(q) ||
-        String(t.status || "")
-          .toLowerCase()
-          .includes(q) ||
-        String(t.ticket_type_description || "")
-          .toLowerCase()
-          .includes(q)
+        String(t.ticket_number || "").toLowerCase().includes(q) ||
+        String(t.title || "").toLowerCase().includes(q) ||
+        String(t.description || "").toLowerCase().includes(q) ||
+        String(t.created_by_name || "").toLowerCase().includes(q) ||
+        String(t.category || "").toLowerCase().includes(q) ||
+        String(t.status || "").toLowerCase().includes(q) ||
+        String(t.ticket_type_description || "").toLowerCase().includes(q)
       );
     });
   }, [tickets, activeTickets, viewMode, debouncedSearch]);
@@ -122,6 +83,28 @@ export default function AllTicketsPage() {
         activeLabel="Active Tickets"
         allLabel="All Tickets"
       />
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
+        <div className="rounded-3xl bg-white p-6 text-center shadow-xl">
+          <p className="text-sm font-bold text-rose-600">
+            Failed to load tickets
+          </p>
+          <p className="mt-2 text-xs text-slate-500">
+            {error?.message || "Please try again later."}
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            className="mt-4 rounded-2xl bg-[rgb(21,98,160)] px-4 py-2 text-sm font-semibold text-white"
+          >
+            Back Home
+          </button>
+        </div>
+      </div>
     );
   }
 
@@ -189,17 +172,15 @@ export default function AllTicketsPage() {
 
               <div className="mt-6 space-y-4">
                 <div className="relative grid grid-cols-2 gap-1 rounded-[24px] bg-slate-100 p-1">
-                  {/* Animated background */}
                   <motion.div
                     layout
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-[20px] bg-white shadow`}
+                    className="absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-[20px] bg-white shadow"
                     style={{
                       left: viewMode === "active" ? "4px" : "calc(50% + 2px)",
                     }}
                   />
 
-                  {/* Active button */}
                   <button
                     type="button"
                     onClick={() => {
@@ -215,7 +196,6 @@ export default function AllTicketsPage() {
                     Active Tickets
                   </button>
 
-                  {/* All button */}
                   <button
                     type="button"
                     onClick={() => {
@@ -394,6 +374,7 @@ export default function AllTicketsPage() {
           </div>
         </div>
       </div>
+
       <ScrollToTopButton show={showScrollTop} onClick={scrollToTop} />
     </div>
   );
