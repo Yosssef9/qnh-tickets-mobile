@@ -12,7 +12,12 @@ export function useNotificationSetup(user) {
 
   useEffect(() => {
     if (!user?.userCode) return;
-    if (Notification.permission !== "granted") return;
+
+    if (typeof window === "undefined") return;
+
+    if (!("Notification" in window)) return;
+
+    if (window.Notification.permission !== "granted") return;
 
     let unsubscribe = () => {};
 
